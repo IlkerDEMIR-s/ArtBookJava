@@ -4,10 +4,12 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -57,6 +59,7 @@ public class ArtActivity2nd extends AppCompatActivity {
             binding.artistText.setText("");
             binding.yearText.setText("");
             binding.saveButton.setVisibility(View.VISIBLE);
+            binding.deleteButton.setVisibility(View.GONE);
             binding.imageView2.setImageResource(R.drawable.add);
 
 
@@ -64,7 +67,9 @@ public class ArtActivity2nd extends AppCompatActivity {
         else{
             //old Art
             int artId = intent.getIntExtra("artId", 1);
-            binding.saveButton.setVisibility(View.INVISIBLE);
+            binding.saveButton.setVisibility(View.GONE);
+            binding.deleteButton.setVisibility(View.VISIBLE);
+
 
 
 
@@ -96,39 +101,91 @@ public class ArtActivity2nd extends AppCompatActivity {
 
     public void save(View view) {
 
-        String artName = binding.nameText.getText().toString();
-        String artistName = binding.artistText.getText().toString();
-        String year = binding.yearText.getText().toString();
+        AlertDialog.Builder alert = new AlertDialog.Builder(ArtActivity2nd.this);
+        alert.setTitle("Are you sure?");
+        alert.setMessage("Do you want to save this art?");
+        alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // save the art
+                String artName = binding.nameText.getText().toString();
+                String artistName = binding.artistText.getText().toString();
+                String year = binding.yearText.getText().toString();
 
-        Bitmap smallImage = makeSmallerImage(selectedImage, 300);
+                Bitmap smallImage = makeSmallerImage(selectedImage, 300);
 
-        // convert bitmap to byte array (for saving in database)
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        smallImage.compress(Bitmap.CompressFormat.PNG, 50, outputStream);
-        byte[] byteArray = outputStream.toByteArray(); // we convert the image to byte array
+                // convert bitmap to byte array (for saving in database)
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                smallImage.compress(Bitmap.CompressFormat.PNG, 50, outputStream);
+                byte[] byteArray = outputStream.toByteArray(); // we convert the image to byte array
 
-        try {
+                try {
 
-            database.execSQL("CREATE TABLE IF NOT EXISTS artsInBook (id INTEGER PRIMARY KEY, artName VARCHAR, artistName VARCHAR, year VARCHAR, image BLOB)");
+                    database.execSQL("CREATE TABLE IF NOT EXISTS artsInBook (id INTEGER PRIMARY KEY, artName VARCHAR, artistName VARCHAR, year VARCHAR, image BLOB)");
 
-            String sqlString = "INSERT INTO artsInBook (artName, artistName, year, image) VALUES (?, ?, ?, ?)"; // ? is used to bind the string to the sql statement
-            SQLiteStatement sqLiteStatement = database.compileStatement(sqlString); // compileStatement() is used to compile the sql statement
-            sqLiteStatement.bindString(1, artName);  // bindString() is used to bind the string to the sql statement
-            sqLiteStatement.bindString(2, artistName); // index starts from 1 not 0 (1st ?, 2nd ?, 3rd ?, 4th ?)
-            sqLiteStatement.bindString(3, year);
-            sqLiteStatement.bindBlob(4, byteArray);
-            sqLiteStatement.execute();
+                    String sqlString = "INSERT INTO artsInBook (artName, artistName, year, image) VALUES (?, ?, ?, ?)"; // ? is used to bind the string to the sql statement
+                    SQLiteStatement sqLiteStatement = database.compileStatement(sqlString); // compileStatement() is used to compile the sql statement
+                    sqLiteStatement.bindString(1, artName);  // bindString() is used to bind the string to the sql statement
+                    sqLiteStatement.bindString(2, artistName); // index starts from 1 not 0 (1st ?, 2nd ?, 3rd ?, 4th ?)
+                    sqLiteStatement.bindString(3, year);
+                    sqLiteStatement.bindBlob(4, byteArray);
+                    sqLiteStatement.execute();
 
-            //database.execSQL("DROP TABLE arts");
+                    //database.execSQL("DROP TABLE arts");
 
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-        //finish();  // this method is used to close the activity. we don't use this method because we want to go back to the main activity when we renounce our process.
-        Intent intent = new Intent(ArtActivity2nd.this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);  // this method is used to clear the top activity from the stack
-        startActivity(intent);
+                //finish();  // this method is used to close the activity. we don't use this method because we want to go back to the main activity when we renounce our process.
+                Intent intent = new Intent(ArtActivity2nd.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);  // this method is used to clear the top activity from the stack
+                startActivity(intent);
+            }
+        });
+        alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // do nothing
+                Toast.makeText(ArtActivity2nd.this, "Art not saved!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        alert.show();
+
+    }
+
+    public void delete(View view){
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(ArtActivity2nd.this);
+        alert.setTitle("Are you sure?");
+        alert.setMessage("Do you want to delete this art?");
+        alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // delete the art
+                Intent intent = getIntent(); // get the intent from the main activity
+                int artId = intent.getIntExtra("artId", 1);
+
+                try {
+                    database.execSQL("DELETE FROM artsInBook WHERE id = ?", new String[] {String.valueOf(artId)});
+                    Toast.makeText(ArtActivity2nd.this, "Art deleted", Toast.LENGTH_SHORT).show();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+                Intent intent2 = new Intent(ArtActivity2nd.this, MainActivity.class);
+                intent2.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);  // this method is used to clear the top activity from the stack
+                startActivity(intent2);
+            }
+        });
+        alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // do nothing
+                Toast.makeText(ArtActivity2nd.this, "Art not deleted!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        alert.show();
 
     }
 

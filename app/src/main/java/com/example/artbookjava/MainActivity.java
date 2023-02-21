@@ -7,11 +7,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+
 
 import com.example.artbookjava.databinding.ActivityMainBinding;
 
@@ -55,12 +58,26 @@ public class MainActivity extends AppCompatActivity {
 
             int nameIx = cursor.getColumnIndex("artName");
             int idIx = cursor.getColumnIndex("id");
+            int artistIx = cursor.getColumnIndex("artistName");
+            int imageIx = cursor.getColumnIndex("image");
 
             while (cursor.moveToNext()) {
                 String name = cursor.getString(nameIx);
                 int id = cursor.getInt(idIx);
+                String artist = cursor.getString(artistIx);
 
-                Art art = new Art(name, id);
+                byte[] bytes = cursor.getBlob(imageIx);
+                Bitmap originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+                // Resize the bitmap to a desired width and height
+                int desiredWidth = 120; // Replace with your desired width
+                int desiredHeight = 100; // Replace with your desired height
+                Bitmap resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, desiredWidth, desiredHeight, true);
+
+
+                Art art = new Art(name, id, artist, resizedBitmap);  // this is the art object
+
+
 
                 artArrayList.add(art); // this is the array list of art objects
             }
@@ -75,6 +92,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+    public Bitmap resizeBitmap(Bitmap bitmap, int width, int height) {
+        Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
+        return resizedBitmap;
+    }
+
 
     public boolean onCreateOptionsMenu(Menu menu) {  // this method is called when the menu is created
         // Inflater

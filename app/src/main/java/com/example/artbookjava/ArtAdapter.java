@@ -2,6 +2,8 @@ package com.example.artbookjava;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +34,11 @@ public class ArtAdapter extends RecyclerView.Adapter<ArtAdapter.ArtHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ArtAdapter.ArtHolder holder, @SuppressLint("RecyclerView") int position) {
-        holder.binding.recyclerViewTextView.setText(artArrayList.get(position).name);
+        holder.binding.artNameRecyclerText.setText(artArrayList.get(position).name);
+
+        holder.binding.imageRecyclerView.setImageBitmap(artArrayList.get(position).image);
+
+        holder.binding.artistNameRecyclerText.setText(artArrayList.get(position).artist);
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
