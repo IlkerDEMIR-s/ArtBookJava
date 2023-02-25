@@ -2,6 +2,7 @@ package com.example.artbookjava;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.content.Intent;
@@ -42,6 +43,11 @@ public class MainActivity extends AppCompatActivity {
         binding.recyclerView.setAdapter(artAdapter);  // this method is used to set the adapter
 
         getData();  // this method is used to get the data from the database
+
+        // Divider
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(MainActivity.this,
+                DividerItemDecoration.VERTICAL);
+        binding.recyclerView.addItemDecoration(dividerItemDecoration);
 
 
     }
